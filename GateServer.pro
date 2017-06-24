@@ -28,7 +28,8 @@ SOURCES += main.cpp \
     GW2/gw2blacklist.cpp \
     Util/database.cpp \
     Auth/authserver.cpp \
-    GW2/gw2authpacket.cpp
+    GW2/gw2authpacket.cpp \
+    Mitm/gw2forwardingclient.cpp
 #-lmongoclient -lboost_system
 LIBS += -lconfig++ -pthread -luuid
 LIBS += -L"/usr/local/lib64/" -lcrypto
@@ -67,4 +68,5 @@ HEADERS += \
     GW2/gw2blacklist.h \
     Util/database.h \
     Auth/authserver.h \
-    GW2/gw2authpacket.h
+    GW2/gw2authpacket.h \
+    Mitm/gw2forwardingclient.h
