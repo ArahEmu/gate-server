@@ -1,6 +1,6 @@
 ﻿#include "framework.h"
 
-Framework::Framework() : m_Running(true), m_Options(), m_LoginServer(), m_AuthServer(), m_Clock(5000)
+Framework::Framework() : m_Running(true), m_Options(), m_LoginServer(), m_AuthServer(), m_ProxyServer(), m_Clock(5000)
 {
 
 }
@@ -25,6 +25,10 @@ int Framework::Run(int argc, char **argv)
 
     if (strcmp(m_Options.m_ServerMode, "auth") == 0) {
         return RunAuth();
+    }
+
+    if (strcmp(m_Options.m_ServerMode, "proxy") == 0) {
+        return RunProxy();
     }
 
     return 0;
@@ -118,6 +122,32 @@ int Framework::RunAuth()
     }
 
     m_LoginServer.Shutdown();
+}
+
+int Framework::RunProxy()
+{
+    int authPort = GetSettingInteger("networking.proxy_server.port");
+    const char* gatewayCertificate = GetSettingString("networking.proxy_server.certFile");
+    const char* gatewayPrivateKey = GetSettingString("networking.proxy_server.keyFile");
+
+    printf("Starting %s\n", m_Options.m_ServerName);
+    printf("Starting proxy server on port %d\n", authPort);
+
+    m_ProxyServer.Startup(authPort, gatewayCertificate, gatewayPrivateKey);
+    m_Clock.Start();
+
+    // Main thread loop, do any non blocking functions here.
+    while (m_Running) {
+
+        // Update
+        m_ProxyServer.Update();
+
+        // Update the clock.
+        m_Clock.Frame();
+
+    }
+
+    m_ProxyServer.Shutdown();
 }
 
 bool Framework::Configure(int argc, char **argv)

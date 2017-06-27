@@ -13,6 +13,11 @@ bool LoginServer::Startup(uint16_t ServerPort, const char* Certificate, const ch
     m_ServerPort = ServerPort;
     m_MitmMode = MitmMode;
 
+    if (m_MitmMode == true) {
+        printf("MITM mode has been disabled in this release, feature comming soon.");
+        m_MitmMode = false;
+    }
+
     if (!m_SSL.Init(Certificate, PrivateKey)) {
         printf("Unable to init SSL, most likely an issue with reading the Certificate or Private Key\n.");
         return false;

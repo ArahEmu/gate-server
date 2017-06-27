@@ -21,6 +21,7 @@
 #include "Login/loginserver.h"
 #include "Auth/authserver.h"
 #include "GW2/gw2blacklist.h"
+#include "Mitm/proxyserver.h"
 
 #define REQ_ARGUMENTS_C 1 // Require just the filename to the config file
 
@@ -45,6 +46,7 @@ public:
     int                 Run(int argc, char** argv);
     int                 RunGateway();
     int                 RunAuth();
+    int                 RunProxy();
 public:
     bool                Configure(int argc, char** argv);
 public:
@@ -54,6 +56,8 @@ private:
     FrameworkOptions    m_Options;
     LoginServer         m_LoginServer;
     AuthServer          m_AuthServer;
+    ProxyServer         m_ProxyServer;
+
 private:
     ServerClock         m_Clock;
 };
