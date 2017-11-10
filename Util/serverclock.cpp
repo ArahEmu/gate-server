@@ -7,12 +7,19 @@ ServerClock::ServerClock(unsigned int rate) : m_cTime(), m_pTime(), m_uDelta(0),
 
 void ServerClock::Start()
 {
+#ifdef _WIN32
+    int CLOCK_REALTIME = -1;
+#endif
     clock_gettime(CLOCK_REALTIME, &m_pTime);
     m_Frames = 0;
 }
 
 bool ServerClock::InFrame()
 {
+#ifdef _WIN32
+    int CLOCK_REALTIME = -1;
+#endif
+
     // Update the current frame time
     clock_gettime(CLOCK_REALTIME, &m_cTime);
 

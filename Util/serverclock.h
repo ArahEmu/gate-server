@@ -7,7 +7,12 @@
  * Developed by Nomelx
  * */
 
-#include <unistd.h>
+#include "defines.h"
+
+#ifndef _WIN32
+#   include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 

@@ -12,8 +12,6 @@
 #include <string>
 #include <time.h>
 
-//#include "mongo/client/dbclient.h"
-
 #include "Util/serverconfig.h"
 #include "Util/serverclock.h"
 #include "Util/system.h"

@@ -27,6 +27,8 @@ RecieveType SecureLogin::Recieve(ServerSSL *SSL)
         } else {
             return RT_TLS_WAIT;
         }
+    } else if (m_State == RT_TLS_WAIT) {
+
     }
 
     return RT_TLS_WAIT;

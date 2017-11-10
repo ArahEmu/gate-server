@@ -1,6 +1,36 @@
 #include "loginclient.h"
 #include "loginserver.h"
 
+/**************/
+
+struct UNK_PACKET_01 {
+    uint16_t unk01;
+    uint16_t size;
+    char* unkdata;
+};
+
+struct ClientVersionPacket {
+    uint16_t packetCode;
+    uint16_t packetLength;
+    uint32_t ClientVersion;
+    uint32_t ClientProgram;
+    uint32_t UNK_01;
+};
+
+struct ClientEncryptionSeedPacket {
+    uint16_t packetCode;
+    char CypherSeed[64];
+};
+
+struct ClientIdentity {
+    uint16_t packetCode;
+    wchar_t ClientUsername[1024];
+    wchar_t ClientHostName[1024];
+};
+
+/**************/
+
+
 LoginClient::LoginClient(ClientConnection &Base) : ClientConnection(), m_Packet(), m_Login(this), m_Session(this), m_MitmSocket()
 {
     this->m_ClientSocket = Base.m_ClientSocket;
@@ -48,6 +78,87 @@ void LoginClient::Tick(LoginServer *ServerInstance)
             // Then clear out.
             m_Packet.Clear();
         }
+
+        //
+        else if (readLength > 0) {
+            uint16_t packetCode = ((uint16_t*)incommingBuffer)[0];
+
+            switch(packetCode) {
+            case 1024: { // Client Hello / Version Information
+                ClientVersionPacket incommingVersionPacket;
+                memset(&incommingVersionPacket, 0, sizeof(ClientVersionPacket));
+                memcpy(&incommingVersionPacket, incommingBuffer, sizeof(ClientVersionPacket));
+                printf("Incomming Game Connection, Client Version %d\n", incommingVersionPacket.ClientVersion);
+                break;
+            }
+            case 16896: { // Cypher Seed packet
+                ClientEncryptionSeedPacket incommingCypherPacket;
+                memcpy(&incommingCypherPacket, incommingBuffer, sizeof(ClientEncryptionSeedPacket));
+                printf("Client Cypher Seed Recieved.\n");
+
+                char response[22]= { /* Packet 32 */
+                                     0x01, 0x16, 0xae, 0x93, 0xc5, 0x3e, 0x74, 0x64,
+                                     0x05, 0x3c, 0x1d, 0xbc, 0xc6, 0xdb, 0x3a, 0xe2,
+                                     0x01, 0x0a, 0xa9, 0xf7, 0xda, 0xeb };
+
+                Send(response, sizeof(response));
+                printf("Sent Response.\n");
+                break;
+            }
+            case 2: { // Client Host name (computer name)
+                ClientIdentity incommingClientIdentity;
+                memset(&incommingClientIdentity, 0, sizeof(ClientIdentity));
+                incommingClientIdentity.packetCode = packetCode;
+                auto usernameLength = wcslen((wchar_t*)(incommingBuffer+2));
+                auto computerNameAddress = (wchar_t*)(incommingBuffer+2+(usernameLength*2)+2);
+                auto computerNameLength = wcslen((wchar_t*)(incommingBuffer+2+(usernameLength*2)+2));
+                wcsncpy_s(incommingClientIdentity.ClientUsername, (wchar_t*)(incommingBuffer+2), usernameLength );
+                wcsncpy_s(incommingClientIdentity.ClientHostName, (wchar_t*)(incommingBuffer+2+(usernameLength*2)+2), computerNameLength );
+                setlocale(LC_ALL, "");
+                printf("Computer Username: %ls , Computer Name: %ls\n", incommingClientIdentity.ClientUsername, incommingClientIdentity.ClientHostName);
+                char poisionResponse[22]= { /* Packet 32 */
+                                     0x69, 0x63, 0x69, 0x63, 0x69, 0x63, 0x69, 0x63,
+                                     0x69, 0x63, 0x69, 0x63, 0x69, 0x63, 0x69, 0x63,
+                                     0x69, 0x63, 0x69, 0x63, 0x69, 0x63 };
+
+                Send(poisionResponse, sizeof(poisionResponse));
+                break;
+            }
+            default: { // Unknown Packet
+                 printf("Incomming Unknown Packet Code %d\n", packetCode);
+                 char padding[] = {0x69, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x69};
+                 System::DebugWriteMessage("UNK_PACKETS.dat", incommingBuffer, readLength);
+                 System::DebugWriteMessage("UNK_PACKETS.dat", padding, sizeof(padding));
+            }
+            }
+
+
+
+            /*int validPacketIndex = -1;
+            for (auto i = 0; i < readLength; i++) {
+                if (incommingBuffer[i] != 0) {
+                    validPacketIndex = i;
+                    break;
+                }
+            }
+
+            if (validPacketIndex > 0) {
+                char* packetBuffer = new char[(readLength-validPacketIndex)+1];
+                memset(packetBuffer, 0, (readLength-validPacketIndex)+1);
+                memcpy(packetBuffer, incommingBuffer+validPacketIndex, readLength-validPacketIndex);
+
+                if (m_Packet.Parse(packetBuffer, readLength) && m_Packet.Validate()) {
+                    // Read in and spit out.
+                    if (m_Session.Recieve(&m_Packet)) {
+                    }
+
+                    // Then clear out.
+                    m_Packet.Clear();
+                }
+            }*/
+        } else {
+
+        }
     }
 
     // Otherwise its probably a game / ssl packet
@@ -55,6 +166,7 @@ void LoginClient::Tick(LoginServer *ServerInstance)
 
         auto loginState = m_Login.Recieve(ServerInstance->SSL());
 
+        // MITM Stuff...
         if (ServerInstance->Mitm()) {
             if (m_MitmSocket.TLSReady() && m_MitmSocket.TLSEstablished() == false) {
                 if (!m_MitmSocket.EstablishTLSSession()) {
@@ -81,10 +193,13 @@ void LoginClient::Tick(LoginServer *ServerInstance)
                     m_MitmSocket.SendTLSToANet(clientLoginBuffer, strlen(clientLoginBuffer));
                 }
             }
+        } else {
+
         }
 
-
     } // m_TSLReady
+
+    CheckIdle();
 }
 
 void LoginClient::Close()

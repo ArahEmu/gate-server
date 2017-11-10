@@ -3,7 +3,7 @@
 #include "../3rdParty/rapidxml-1.13/rapidxml_print.hpp"
 
 GW2Packet::GW2Packet(const char* path, int sequence, GW2PacketType type) :m_PacketHeader(),  m_PacketData(),
-    m_Sequence(sequence), m_Type(type), m_Document(), m_RequestNode(nullptr), m_Elements()
+    m_Sequence(sequence), m_Type(type), m_Document(), m_RequestNode(nullptr), m_Elements(), m_BufferData(nullptr)
 {
     // Set the request path.
     memset(m_PacketHeader, 0, sizeof(m_PacketHeader));
@@ -58,6 +58,11 @@ void GW2Packet::SetErrorStatue(const char *error_code)
 
 const char *GW2Packet::Payload(const char *failCode)
 {
+	if (m_BufferData != nullptr) {
+		delete[] m_BufferData;
+		m_BufferData = nullptr;
+	}
+
     std::string header = "";
     std::string reply = "";
 
@@ -92,9 +97,15 @@ const char *GW2Packet::Payload(const char *failCode)
     reply += header;
     reply += bodyBuffer;
 
-    FILE* debug = fopen("out.dat", "wb");
+	// Write the packet to disk.
+    FILE* debug = fopen("sent.log", "wb");
     fwrite(reply.c_str(), sizeof(char), reply.size(), debug);
     fclose(debug);
 
-    return reply.c_str();
+	// Copy our packet data to the return buffer.
+	m_BufferData = new char[reply.size()+1];
+	memset(m_BufferData, 0, reply.size() + 1);
+	memcpy(m_BufferData, reply.c_str(), reply.size());
+
+    return m_BufferData;
 }

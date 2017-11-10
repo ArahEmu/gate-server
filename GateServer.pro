@@ -4,7 +4,40 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += c++11
 
+CFLAGS += -m32
+QMAKE_CXXFLAGS += -m32
+
+#Linux include paths
 INCLUDEPATH += /usr/include/mysql++/ /usr/include/mysql/
+
+#Windows include paths
+INCLUDEPATH += ./Libs/libconfig
+INCLUDEPATH += ./Libs/mysql++
+INCLUDEPATH += 'C:/Program Files/MySQL/MySQL Connector C 6.1/include'
+INCLUDEPATH += 'C:/OpenSSL-Win64/include'
+
+
+
+win32 {
+    LIBS += -lws2_32 -lole32 -lwsock32 -luuid
+    LIBS += $$absolute_path("libconfig.lib", "G:/ArahEmu/gate-server/Libs/")
+    LIBS += $$absolute_path("libconfig++.lib", "G:/ArahEmu/gate-server/Libs/")
+
+    LIBS += $$absolute_path("mysqlpp_d.lib", "G:/ArahEmu/gate-server/Libs/")
+    LIBS += $$absolute_path("mysqlpp_excommon.lib", "G:/ArahEmu/gate-server/Libs/")
+    LIBS += $$absolute_path("mysqlpp_ssqls2parse.lib", "G:/ArahEmu/gate-server/Libs/")
+
+    LIBS += $$absolute_path("ssleay32.lib", "C:/OpenSSL-Win64/lib/")
+    LIBS += $$absolute_path("libeay32.lib", "C:/OpenSSL-Win64/lib/")
+}
+
+unix {
+    #-lmongoclient -lboost_system
+    LIBS += -lconfig++ -pthread -luuid
+    LIBS += -L"/usr/local/lib64/" -lcrypto
+    LIBS += -L"/usr/local/lib64/" -lssl
+    LIBS += -L"/usr/lib64/" -lmysqlpp
+}
 
 SOURCES += main.cpp \
     framework.cpp \
@@ -30,12 +63,8 @@ SOURCES += main.cpp \
     Auth/authserver.cpp \
     GW2/gw2authpacket.cpp \
     Mitm/gw2forwardingclient.cpp \
-    Mitm/proxyserver.cpp
-#-lmongoclient -lboost_system
-LIBS += -lconfig++ -pthread -luuid
-LIBS += -L"/usr/local/lib64/" -lcrypto
-LIBS += -L"/usr/local/lib64/" -lssl
-LIBS += -L"/usr/lib64/" -lmysqlpp
+    Mitm/proxyserver.cpp \
+    port.cpp
 
 QMAKE_CXXFLAGS +=
 
@@ -71,4 +100,6 @@ HEADERS += \
     Auth/authserver.h \
     GW2/gw2authpacket.h \
     Mitm/gw2forwardingclient.h \
-    Mitm/proxyserver.h
+    Mitm/proxyserver.h \
+    defines.h \
+    port.h

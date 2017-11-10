@@ -7,15 +7,20 @@
  * Developed by Nomelx
  * */
 
+#include "networking.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
 #include <string.h>
-#include <unistd.h>
+
+#ifndef _WIN32
+#   include <unistd.h>
+#endif
+
 #include <fcntl.h>
 
 #include "../Util/system.h"
-#include "networking.h"
 #include "clientconnection.h"
 
 class ServerSocket

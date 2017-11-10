@@ -9,7 +9,6 @@ LoginServer::LoginServer() : m_Running(false), m_MitmMode(false), m_ServerPort(0
 bool LoginServer::Startup(uint16_t ServerPort, const char* Certificate, const char* PrivateKey, bool MitmMode)
 {
     m_Running = true;
-    m_loginThread = std::thread(Run, this);
     m_ServerPort = ServerPort;
     m_MitmMode = MitmMode;
 
@@ -28,7 +27,9 @@ bool LoginServer::Startup(uint16_t ServerPort, const char* Certificate, const ch
         };
 
     Database::Get().ItterateQuery("SELECT * FROM cligate.Gates;", funct);
-    printf("Login server discovered %d gateway/s\n", m_Gateways.size());
+    printf("Login server discovered %zd gateway/s\n", m_Gateways.size());
+
+    m_loginThread = std::thread(Run, this);
 
     return true;
 }
@@ -41,6 +42,7 @@ void LoginServer::Update()
      * This is our heavy weight champion
      * we itterate over any connected players and perform network io with
      * the clients here.
+     * Future imporvments would be to impliment threaded pools of clients.
      */
 
     for (unsigned int i = 0; i < m_Clients.size(); i++) {
@@ -60,7 +62,7 @@ void LoginServer::Update()
         } else {
             m_Clients.erase(m_Clients.begin()+i);
             printf("Client Disconnected: %s\n", client->m_ClientIP);
-            printf("Connected Clients: %lu\n", m_Clients.size());
+            printf("Connected Clients: %zu\n", m_Clients.size());
         }
 
     }
@@ -80,7 +82,10 @@ void LoginServer::Shutdown()
 void LoginServer::Run(LoginServer *Instance)
 {
     ServerSocket runningSocket;
-    runningSocket.Configure(Instance->m_ServerPort);
+	if (runningSocket.Configure(Instance->m_ServerPort) == false) {
+		printf("Unable to establish server socket, there is an issue with the server.\n");
+		return;
+	}
 
     while (Instance->m_Running) {
         /*
@@ -95,7 +100,6 @@ void LoginServer::Run(LoginServer *Instance)
         Instance->m_ClientsLock.lock();
         Instance->m_Clients.push_back(client);
         Instance->m_ClientsLock.unlock();
-
     }
 
     runningSocket.Flush();

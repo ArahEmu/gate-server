@@ -7,6 +7,7 @@ AuthServer::AuthServer()
 
 bool AuthServer::Startup(int port)
 {
+	UNREFERENCED_PARAMETER(port);
     return true;
 }
 

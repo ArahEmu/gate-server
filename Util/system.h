@@ -7,9 +7,15 @@
  * Developed by Nomelx
  * */
 
+#include "defines.h"
+
 #include <stdio.h>
 #include <signal.h>
-#include <unistd.h>
+
+#ifndef _WIN32
+#   include <unistd.h>
+#endif
+
 #include <sys/types.h>
 
 class System

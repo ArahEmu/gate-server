@@ -7,6 +7,8 @@
  * Developed by Nomelx
  * */
 
+#include "defines.h"
+
 #include "securelogin.h"
 #include "GW2/gw2packet.h"
 #include "Networking/xmlpacket.h"
@@ -16,7 +18,11 @@
 
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <uuid/uuid.h>
+#endif
 #include <string>
 
 struct SessionSendPacket {

@@ -7,7 +7,7 @@ Framework::Framework() : m_Running(true), m_Options(), m_LoginServer(), m_AuthSe
 
 int Framework::Run(int argc, char **argv)
 {
-    printf(">> GW2SEX - Guild Wars 2 Server Emulator for XNIX\n");
+    printf(">> GW2SEX - Guild Wars 2 Server Emulator for XNIX (And now WIN32!)\n");
     printf(">> Some ideas taken from http://poke152.blogspot.com.au/2012_12_01_archive.html\n");
     printf(">> Developed by Nomelx\n\n");
 
@@ -31,6 +31,7 @@ int Framework::Run(int argc, char **argv)
         return RunProxy();
     }
 
+    printf("No configuration mode was specified, please check your config file.");
     return 0;
 }
 
@@ -70,7 +71,7 @@ int Framework::RunGateway()
     // Populates the blacklist file
     if (!GW2BlackList::Initalize(GetSettingString("networking.login_server.blacklist"))) {
         m_LoginServer.Shutdown();
-        printf("!) Unable to read ban list (listner).\n");
+        printf("!) Unable to read ban list.\n");
         return 1;
     }
 
@@ -90,7 +91,12 @@ int Framework::RunGateway()
             m_Clock.Frame();
 
         } else {
+#ifdef _WIN32
+            ::sleep(1);
+#else
             ::usleep(1000);
+#endif
+
         }
 
     }
@@ -122,6 +128,8 @@ int Framework::RunAuth()
     }
 
     m_LoginServer.Shutdown();
+
+    return 0;
 }
 
 int Framework::RunProxy()
@@ -148,6 +156,8 @@ int Framework::RunProxy()
     }
 
     m_ProxyServer.Shutdown();
+
+    return 0;
 }
 
 bool Framework::Configure(int argc, char **argv)

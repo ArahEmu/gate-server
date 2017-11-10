@@ -1,4 +1,11 @@
 *.pro.user
 *.pro.user.*
 *.o
-
+Libs
+release
+debug
+.vs
+*.sln
+*.vcxproj
+*.GateServer.vcxproj.filters
+*.GateServer.vcxproj.user

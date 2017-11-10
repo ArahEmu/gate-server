@@ -35,6 +35,8 @@ private:
     rapidxml::xml_document<>            m_Document;
     rapidxml::xml_node<>*               m_RequestNode;
     std::vector<rapidxml::xml_node<>*>  m_Elements;
+private:
+	char*								m_BufferData;
 };
 
 #endif // GW2PACKET_H

@@ -84,6 +84,8 @@ void LoginSession::Init(XMLPacket *Packet)
 
     printf("%s -> Client Query { Type: %d , Program: %d, Build: %d, Process: %d }\n", m_Client->m_ClientIP, m_ConnectionType,
            m_Program, m_Build, m_Process);
+
+    m_LogoutRequested = true;
 }
 
 void LoginSession::StartTLS(XMLPacket *Packet)
@@ -94,7 +96,12 @@ void LoginSession::StartTLS(XMLPacket *Packet)
 
     // Do not bother with a formal reply, there does not seem to be any variation in this call
     sprintf(response, "STS/1.0 400 Success\r\ns:%dR\r\nl:%d\r\n\r\n<Error server=\"1001\" module=\"4\" line=\"262\"/>\n", sequence, 45);
-    m_Client->Send(response, strlen(response));
+	
+	auto responseSize = strlen(response);
+	if (responseSize < 0) {
+		responseSize = 0;
+	}
+    m_Client->Send(response, (unsigned int)strlen(response));
     m_TSLReady = true;
 }
 
@@ -167,10 +174,12 @@ void LoginSession::GetHostname(XMLPacket *Packet)
     // Signal that there is TLS data to be sent next time round.
     SessionSendPacket packet;
     memset(packet.m_TLSSendBuffer, 0, 4096);
-    sprintf(packet.m_TLSSendBuffer, replyPacket.Payload());
-    packet.m_TLSSendBufferLength = strlen(packet.m_TLSSendBuffer);
+    sprintf(packet.m_TLSSendBuffer, "%s", replyPacket.Payload());
+    packet.m_TLSSendBufferLength = (int)strlen(packet.m_TLSSendBuffer);
     packet.m_TLSSendNeeded = true;
     m_SendPackets.push_back(packet);
+
+    m_LogoutRequested = true;
 }
 
 void LoginSession::StartSsoLogin(XMLPacket *Packet)
@@ -203,7 +212,7 @@ void LoginSession::StartSsoLogin(XMLPacket *Packet)
                     bio = BIO_push(b64, bio);
 
             BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-            passwordTokenLength = BIO_read(bio, passwordToken, strlen(passwordTokenBase64));
+            passwordTokenLength = BIO_read(bio, passwordToken, (int)strlen(passwordTokenBase64));
             BIO_free_all(bio);
         }
 
@@ -214,7 +223,7 @@ void LoginSession::StartSsoLogin(XMLPacket *Packet)
                     bio = BIO_push(b64, bio);
 
             BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-            passwordLength = BIO_read(bio, password, strlen(passwordBase64));
+            passwordLength = BIO_read(bio, password, (int)strlen(passwordBase64));
             BIO_free_all(bio);
         }
 
@@ -308,7 +317,7 @@ void LoginSession::StartSsoLogin(XMLPacket *Packet)
     SessionSendPacket packet;
     memset(packet.m_TLSSendBuffer, 0, 4096);
     sprintf(packet.m_TLSSendBuffer, replyPacket.Payload());
-    packet.m_TLSSendBufferLength = strlen(packet.m_TLSSendBuffer);
+    packet.m_TLSSendBufferLength = (int)strlen(packet.m_TLSSendBuffer);
     packet.m_TLSSendNeeded = true;
     m_SendPackets.push_back(packet);
 
@@ -375,14 +384,14 @@ void LoginSession::ListGameAccounts(XMLPacket *Packet)
     SessionSendPacket message;
     memset(message.m_TLSSendBuffer, 0, 4096);
     sprintf(message.m_TLSSendBuffer, messagePacket.Payload());
-    message.m_TLSSendBufferLength = strlen(message.m_TLSSendBuffer);
+    message.m_TLSSendBufferLength = (int)strlen(message.m_TLSSendBuffer);
     message.m_TLSSendNeeded = true;
     m_SendPackets.push_back(message);
 
     SessionSendPacket gameArray;
     memset(gameArray.m_TLSSendBuffer, 0, 4096);
     sprintf(gameArray.m_TLSSendBuffer, compiledReply.c_str());
-    gameArray.m_TLSSendBufferLength = strlen(gameArray.m_TLSSendBuffer);
+    gameArray.m_TLSSendBufferLength = (int)strlen(gameArray.m_TLSSendBuffer);
     gameArray.m_TLSSendNeeded = true;
     m_SendPackets.push_back(gameArray);
 }
@@ -405,11 +414,13 @@ void LoginSession::RequestGameToken(XMLPacket *Packet)
     SessionSendPacket packet;
     memset(packet.m_TLSSendBuffer, 0, 4096);
     sprintf(packet.m_TLSSendBuffer, replyPacket.Payload());
-    packet.m_TLSSendBufferLength = strlen(packet.m_TLSSendBuffer);
+    packet.m_TLSSendBufferLength = (int)strlen(packet.m_TLSSendBuffer);
     packet.m_TLSSendNeeded = true;
     m_SendPackets.push_back(packet);
 
     printf("Handing client to Auth2.101.ArenaNetworks.com\n");
+
+    m_LogoutRequested = true;
 }
 
 void LoginSession::Logout(XMLPacket *Packet)
@@ -420,18 +431,30 @@ void LoginSession::Logout(XMLPacket *Packet)
 
     // Do not bother with a formal reply, there does not seem to be any variation in this call
     sprintf(response, "STS/1.0 400 Success\r\ns:%dR\r\nl:%d\r\n\r\n<Error server=\"1001\" module=\"4\" line=\"262\"/>\n", sequence, 45);
-    m_Client->Send(response, strlen(response));
+    m_Client->Send(response, (int)strlen(response));
 
     m_LogoutRequested = true;
 }
 
 std::string LoginSession::CreateGuid()
 {
+#ifdef _WIN32
+    GUID output;
+    CoCreateGuid(&output);
+    OLECHAR* guidString;
+    StringFromCLSID(output, &guidString);
+
+    std::wstring ws( guidString );
+    std::string test( ws.begin(), ws.end() );
+
+    return test;
+#else
     uuid_t id;
     uuid_generate(id);
     char guidString[256];
     uuid_unparse(id, guidString);
     return std::string(guidString);
+#endif
 }
 
 void LoginSession::SaveResumeToken(const char *userGuid, const char *resumeToken)
@@ -465,7 +488,7 @@ void LoginSession::QueueLoginErrorMessage(int sequence)
     SessionSendPacket packet;
     memset(packet.m_TLSSendBuffer, 0, 4096);
     sprintf(packet.m_TLSSendBuffer, replyPacket.Payload("ErrBadPasswd"));
-    packet.m_TLSSendBufferLength = strlen(packet.m_TLSSendBuffer);
+    packet.m_TLSSendBufferLength = (int)strlen(packet.m_TLSSendBuffer);
     packet.m_TLSSendNeeded = true;
     m_SendPackets.push_back(packet);
 }

@@ -7,7 +7,6 @@
  * Developed by Nomelx
  * */
 
-
 #include <stdio.h>
 #include <iostream>
 #include <libconfig.h++>

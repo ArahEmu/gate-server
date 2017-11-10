@@ -7,10 +7,12 @@
  * Developed by Nomelx
  * */
 
+#include "networking.h"
+
 #include <stdio.h>
 #include <cerrno>
-
-#include "networking.h"
+#include <chrono>
+#include <ctime>
 
 enum RecieveError {
     RE_UNK = -1,
@@ -26,6 +28,7 @@ public:
 public:
     void Send(const char* Data, unsigned int DataSize);
     int Poll(char* Buffer, unsigned int BufferSize);
+    void CheckIdle();
 public:
     virtual void Close();
     virtual bool IsConnected();
@@ -33,6 +36,9 @@ public:
     char m_ClientIP[INET_ADDRSTRLEN];
     int m_ClientSocket;
     int m_ClientPriority;
+public:
+    bool m_ClientDisconnectRequest;
+    std::clock_t m_LastResponseTime;
 };
 
 #endif // CLIENTCONNECTION_H

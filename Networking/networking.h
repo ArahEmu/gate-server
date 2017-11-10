@@ -7,13 +7,30 @@
  * Developed by Nomelx
  * */
 
-#include <sys/types.h>
+#define _WINSOCKAPI_
+
+#include "defines.h"
+
+#ifdef SOCK_VER_WIN
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <Ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <io.h>
+#else
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <unistd.h>
+#endif
+
+#include <sys/types.h>
+
+#ifndef _WIN32
+#   include <unistd.h>
+#endif
+
 #include <signal.h>
 #include <assert.h>
 #include <fcntl.h>

@@ -2,7 +2,7 @@
 
 addrinfo g_HintsInstance = {
     AI_PASSIVE,
-    AF_INET,
+    PF_INET,
     SOCK_STREAM,
     IPPROTO_TCP,
     0, 0, 0, 0
@@ -17,6 +17,13 @@ bool ServerSocket::Configure(uint16_t ServerPort)
 {
     System::IgnoreSigPipe();
 
+#ifdef _WIN32 // Initalize shit sock 2
+    WORD wVersionRequested;
+    WSADATA wsaData;
+    wVersionRequested = MAKEWORD(2, 2);
+    WSAStartup(wVersionRequested, &wsaData);
+#endif
+
     addrinfo *serverInfo;
     sprintf(m_Port, "%d", ServerPort);
 
@@ -28,9 +35,11 @@ bool ServerSocket::Configure(uint16_t ServerPort)
     }
 
     m_IntfConfig = *serverInfo;
-    freeaddrinfo(serverInfo);
 
-    m_SocketHandle = socket(m_IntfConfig.ai_family, m_IntfConfig.ai_socktype, m_IntfConfig.ai_protocol);
+    // Need to check what the fuck i was doing this here for
+    //freeaddrinfo(serverInfo);
+
+    m_SocketHandle = (int)socket(m_IntfConfig.ai_family, m_IntfConfig.ai_socktype, m_IntfConfig.ai_protocol);
 
     if (m_SocketHandle == -1) {
         printf("!) socket error: \n");
@@ -38,15 +47,21 @@ bool ServerSocket::Configure(uint16_t ServerPort)
     }
 
     int yes = 1;
+#ifdef _WIN32
+    if (setsockopt(m_SocketHandle, SOL_SOCKET, SO_REUSEADDR, (char*)&yes, sizeof(int)) == -1) {
+#else
     if (setsockopt(m_SocketHandle, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+#endif
+
         printf("!) setsockopt error: \n");
         return false;
     }
 
     result = bind(m_SocketHandle, m_IntfConfig.ai_addr, m_IntfConfig.ai_addrlen);
-
+	
     if (result == -1) {
-        printf("!) bind error: \n");
+		int last_error = WSAGetLastError();
+        printf("!) bind error: %d\n", last_error);
         return false;
     }
 
@@ -84,7 +99,22 @@ ClientConnection ServerSocket::Accept() {
     newClient.m_ClientSocket = accept(m_SocketHandle, (struct sockaddr *)&incomming_address, &addr_size);
 
     // Do not use blocking calls
+#ifdef _WIN32
+
+	if (newClient.m_ClientSocket == INVALID_SOCKET) {
+		int winsockError = WSAGetLastError();
+		throw new std::exception();
+	}
+
+    u_long iMode = 1;
+    ioctlsocket(newClient.m_ClientSocket, FIONBIO, &iMode);
+
+	
+
+#else
     fcntl(newClient.m_ClientSocket, F_SETFL, O_NONBLOCK);
+#endif
+
 
     sockaddr connectingClient;
     socklen_t len = sizeof(connectingClient);
@@ -101,13 +131,23 @@ void ServerSocket::PrintIP(const sockaddr *SocketAddress, const char* Message)
     char connectingIPString[INET_ADDRSTRLEN];
     switch(SocketAddress->sa_family) {
         case AF_INET:
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)SocketAddress)->sin_addr),
-                    connectingIPString, INET_ADDRSTRLEN);
+#ifdef _WIN32
+        InetNtopA(AF_INET, (PVOID*)&(((struct sockaddr_in *)SocketAddress)->sin_addr),
+                connectingIPString, INET_ADDRSTRLEN);
+#else
+        inet_ntop(AF_INET, &(((struct sockaddr_in *)SocketAddress)->sin_addr),
+                connectingIPString, INET_ADDRSTRLEN);
+#endif
             break;
 
         case AF_INET6:
+#ifdef _WIN32
+		InetNtopA(AF_INET, (PVOID*)&(((struct sockaddr_in6 *)SocketAddress)->sin6_addr),
+                connectingIPString, INET_ADDRSTRLEN);
+#else
             inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)SocketAddress)->sin6_addr),
                     connectingIPString, INET_ADDRSTRLEN);
+#endif
             break;
 
         default:
@@ -119,19 +159,29 @@ void ServerSocket::PrintIP(const sockaddr *SocketAddress, const char* Message)
 
 void ServerSocket::WriteIP(const sockaddr *SocketAddress, char *Dst)
 {
-    switch(SocketAddress->sa_family) {
-        case AF_INET:
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)SocketAddress)->sin_addr),
-                    Dst, INET_ADDRSTRLEN);
-            break;
+	switch (SocketAddress->sa_family) {
+	case AF_INET:
+#ifdef _WIN32
+		InetNtopA(AF_INET, (PVOID*)&(((struct sockaddr_in *)SocketAddress)->sin_addr),
+			Dst, INET_ADDRSTRLEN);
+#else
+		inet_ntop(AF_INET, &(((struct sockaddr_in *)SocketAddress)->sin_addr),
+			Dst, INET_ADDRSTRLEN);
+#endif
+		break;
 
-        case AF_INET6:
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)SocketAddress)->sin6_addr),
-                    Dst, INET_ADDRSTRLEN);
-            break;
+	case AF_INET6:
+#ifdef _WIN32
+		InetNtopA(AF_INET, (PVOID*)&(((struct sockaddr_in6 *)SocketAddress)->sin6_addr),
+			Dst, INET_ADDRSTRLEN);
+#else
+		inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)SocketAddress)->sin6_addr),
+			Dst, INET_ADDRSTRLEN);
+#endif
+		break;
 
-        default:
-            strncpy(Dst, "Unknown AF", INET_ADDRSTRLEN);
-    }
+	default:
+		strncpy(Dst, "Unknown AF", INET_ADDRSTRLEN);
+	}
 }
 

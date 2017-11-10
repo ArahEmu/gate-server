@@ -6,14 +6,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+
+#ifndef _WIN32
+#   include <unistd.h>
+#endif
+
 #include <string.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>

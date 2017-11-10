@@ -7,8 +7,17 @@
 #include "sha256.h"
 
 // big endian architectures need #define __BYTE_ORDER __BIG_ENDIAN
+#ifdef _WIN32
+#define IS_BIG_ENDIAN (*(WORD *)"\0\x2" == 0x200)
+#else
 #ifndef _MSC_VER
 #include <endian.h>
+#endif
+#endif
+
+#ifdef IS_BIG_ENDIAN
+#define __BYTE_ORDER __BIG_ENDIAN
+#else
 #endif
 
 namespace eSHA256 {

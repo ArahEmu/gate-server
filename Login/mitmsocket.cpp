@@ -15,7 +15,7 @@ bool MitmSocket::Create()
     }
 
     // Reserve our socket!
-    m_MitmSocket = socket(AF_INET, SOCK_STREAM, 0);
+    m_MitmSocket = (int)socket(AF_INET, SOCK_STREAM, 0);
 
     // Initalize an instance of sockaddr_in for connecting to NCSoft.
     memset(&m_MitmSocketDescriptor, 0, sizeof(m_MitmSocketDescriptor));
@@ -32,8 +32,13 @@ bool MitmSocket::Create()
         return false;
     }
 
+#ifdef _WIN32
+    u_long iMode = 1;
+    ioctlsocket(m_MitmSocket, FIONBIO, &iMode);
+#else
     // Set socket to non blocking
     fcntl(m_MitmSocket, F_SETFL, O_NONBLOCK);
+#endif
 
     // Flag that all went well and return.
     m_Created = true;
@@ -108,11 +113,13 @@ void MitmSocket::SendToANet(const char *Buffer, size_t BufferSize)
     }
 
     unsigned int totalSent = 0;
-    unsigned int toSend = BufferSize;
+	if (BufferSize < 0)
+		BufferSize = 0;
+    unsigned int toSend = (unsigned int)BufferSize;
 
-    while (totalSent != BufferSize) {
+    while (totalSent != (unsigned int)BufferSize) {
         //setsockopt(m_ClientSocket, SOL_SOCKET, SO_SNDBUF,  &DataSize, sizeof(unsigned int));
-        int sent = send(m_MitmSocket, Buffer, BufferSize, 0);
+        int sent = send(m_MitmSocket, Buffer, (int)BufferSize, 0);
         totalSent += sent;
         toSend -= toSend;
         if (sent < 0) {
@@ -127,7 +134,7 @@ void MitmSocket::SendTLSToANet(const char *Buffer, size_t BufferSize)
 {
     if (BufferSize <= 0)
         return;
-    auto sendError = SSL_write(m_MitmSSLSocket, Buffer, BufferSize);
+    auto sendError = SSL_write(m_MitmSSLSocket, Buffer, (int)BufferSize);
     if (sendError == -1) {
         auto sslWriteErrorCode = SSL_get_error(m_MitmSSLSocket, sendError);
         if (sslWriteErrorCode == SSL_ERROR_WANT_READ) {

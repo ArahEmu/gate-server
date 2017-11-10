@@ -40,7 +40,7 @@ void ProxyServer::Update()
         } else {
             m_Clients.erase(m_Clients.begin()+i);
             printf("Client Disconnected: %s\n", client->m_ClientIP);
-            printf("Connected Clients: %lu\n", m_Clients.size());
+            printf("Connected Clients: %zu\n", m_Clients.size());
         }
 
     }
