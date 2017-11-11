@@ -60,8 +60,10 @@ bool ServerSocket::Configure(uint16_t ServerPort)
     result = bind(m_SocketHandle, m_IntfConfig.ai_addr, m_IntfConfig.ai_addrlen);
 	
     if (result == -1) {
+#ifdef _WIN32
 		int last_error = WSAGetLastError();
         printf("!) bind error: %d\n", last_error);
+#endif
         return false;
     }
 

@@ -4,21 +4,18 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += c++11
 
-CFLAGS += -m32
-QMAKE_CXXFLAGS += -m32
-
-#Linux include paths
-INCLUDEPATH += /usr/include/mysql++/ /usr/include/mysql/
-
-#Windows include paths
-INCLUDEPATH += ./Libs/libconfig
-INCLUDEPATH += ./Libs/mysql++
-INCLUDEPATH += 'C:/Program Files/MySQL/MySQL Connector C 6.1/include'
-INCLUDEPATH += 'C:/OpenSSL-Win64/include'
-
+#CFLAGS += -m32
+#QMAKE_CXXFLAGS += -m32
 
 
 win32 {
+    #Windows include paths
+    INCLUDEPATH += ./Libs/libconfig
+    INCLUDEPATH += ./Libs/mysql++
+    INCLUDEPATH += 'C:/Program Files/MySQL/MySQL Connector C 6.1/include'
+    INCLUDEPATH += 'C:/OpenSSL-Win64/include'
+
+    #Windows Libs
     LIBS += -lws2_32 -lole32 -lwsock32 -luuid
     LIBS += $$absolute_path("libconfig.lib", "G:/ArahEmu/gate-server/Libs/")
     LIBS += $$absolute_path("libconfig++.lib", "G:/ArahEmu/gate-server/Libs/")
@@ -32,6 +29,9 @@ win32 {
 }
 
 unix {
+    #Linux include paths
+    INCLUDEPATH += /usr/include/mysql++/ /usr/include/mysql/
+
     #-lmongoclient -lboost_system
     LIBS += -lconfig++ -pthread -luuid
     LIBS += -L"/usr/local/lib64/" -lcrypto

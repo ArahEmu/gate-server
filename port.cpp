@@ -1,8 +1,11 @@
 #include "port.h"
 
+#ifdef _WIN32
+
 #include <WinSock2.h>
 #include <windows.h>
 #include <time.h>
+
 
 /* clock_gettime replacement for win32
  * https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
@@ -68,3 +71,5 @@ clock_gettime(int X, timespec *tv)
     tv->tv_nsec = t.QuadPart % 1000000;
     return (0);
 }
+
+#endif

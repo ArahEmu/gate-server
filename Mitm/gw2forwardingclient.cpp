@@ -21,7 +21,7 @@ GW2ForwardingClient::~GW2ForwardingClient()
 
 void GW2ForwardingClient::Tick(ProxyServer *ServerInstance)
 {
-	UNREFERENCED_PARAMETER(ServerInstance);
+    //UNREFERENCED_PARAMETER(ServerInstance);
 
     // Read any incomming packets from client.
     char incommingBuffer[2048];

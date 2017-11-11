@@ -7,6 +7,7 @@ const char* g_AUTH_GetHost          = "/Auth/GetHostname STS/1.0";
 const char* g_AUTH_StartSsoLogin    = "/Auth/StartSsoLogin STS/1.0";
 const char* g_AUTH_ListGameAcc      = "/Account/ListMyGameAccounts STS/1.0";
 const char* g_AUTH_Logout           = "/Auth/LogoutMyClient STS/1.0";
+const char* g_AUTH_Resume           = "/Auth/Resume STS/1.0";
 const char* g_AUTH_RequestGameToken = "/Auth/RequestGameToken STS/1.0";
 
 LoginSession::LoginSession(ClientConnection *Client) : m_Client(Client), m_ConnectionType(0), m_Program(0),
@@ -43,6 +44,10 @@ bool LoginSession::Recieve(XMLPacket *Packet)
 
     else if (strncmp(Packet->m_Path, g_AUTH_ListGameAcc, sizeof(Packet->m_Path)) == 0) {
         ListGameAccounts(Packet);
+    }
+
+    else if (strncmp(Packet->m_Path, g_AUTH_Resume, sizeof(Packet->m_Path)) == 0) {
+        ResumeAuthentication(Packet);
     }
 
     else if (strncmp(Packet->m_Path, g_AUTH_RequestGameToken, sizeof(Packet->m_Path)) == 0) {
@@ -82,8 +87,8 @@ void LoginSession::Init(XMLPacket *Packet)
     m_Build = atoi(connect_node->first_node("Build")->value());
     m_Process = atoi(connect_node->first_node("Process")->value());
 
-    printf("%s -> Client Query { Type: %d , Program: %d, Build: %d, Process: %d }\n", m_Client->m_ClientIP, m_ConnectionType,
-           m_Program, m_Build, m_Process);
+    /*printf("%s -> Client Query { Type: %d , Program: %d, Build: %d, Process: %d }\n", m_Client->m_ClientIP, m_ConnectionType,
+           m_Program, m_Build, m_Process);*/
 
     m_LogoutRequested = true;
 }
@@ -394,6 +399,21 @@ void LoginSession::ListGameAccounts(XMLPacket *Packet)
     gameArray.m_TLSSendBufferLength = (int)strlen(gameArray.m_TLSSendBuffer);
     gameArray.m_TLSSendNeeded = true;
     m_SendPackets.push_back(gameArray);
+}
+
+void LoginSession::ResumeAuthentication(XMLPacket *Packet)
+{
+    char response[512];
+    int sequence = Packet->m_Meta[2] - '0';
+
+    // Do not bother with a formal reply, there does not seem to be any variation in this call
+    sprintf(response, "STS/1.0 400 Success\r\ns:%dR\r\nl:%d\r\n\r\n<Error server=\"1001\" module=\"4\" line=\"262\"/>\n", sequence, 45);
+
+    auto responseSize = strlen(response);
+    if (responseSize < 0) {
+        responseSize = 0;
+    }
+    m_Client->Send(response, (unsigned int)strlen(response));
 }
 
 void LoginSession::RequestGameToken(XMLPacket *Packet)

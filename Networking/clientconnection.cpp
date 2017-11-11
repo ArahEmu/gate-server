@@ -64,7 +64,11 @@ void ClientConnection::CheckIdle()
 }
 
 void ClientConnection::Close() {
+#ifdef _WIN32
     m_ClientSocket = shutdown(m_ClientSocket, SD_BOTH);
+#else
+    m_ClientSocket = shutdown(m_ClientSocket, SHUT_RDWR);
+#endif
     m_ClientSocket = -1;
 }
 

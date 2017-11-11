@@ -46,6 +46,7 @@ private:
     void GetHostname(XMLPacket* Packet);
     void StartSsoLogin(XMLPacket* Packet);
     void ListGameAccounts(XMLPacket* Packet);
+    void ResumeAuthentication(XMLPacket* Packet);
     void RequestGameToken(XMLPacket* Packet);
     void Logout(XMLPacket *Packet);
 private:

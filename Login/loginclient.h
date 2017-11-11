@@ -7,8 +7,12 @@
  * Developed by Nomelx
  * */
 
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #include <string.h>
 #include <stdio.h>
+#include <wchar.h>
+#include <locale.h>
 
 #include "../Networking/clientconnection.h"
 #include "../Networking/xmlpacket.h"

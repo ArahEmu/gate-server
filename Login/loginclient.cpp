@@ -73,6 +73,9 @@ void LoginClient::Tick(LoginServer *ServerInstance)
 
             // Read in and spit out.
             if (m_Session.Recieve(&m_Packet)) {
+                System::DebugWriteMessage("Plain_Trace.dat", "--Send--\n\n", strlen("--Send--\n\n"));
+                System::DebugWriteMessage("Plain_Trace.dat", incommingBuffer, readLength);
+                System::DebugWriteMessage("Plain_Trace.dat", "\n\n--Send END--\n\n", strlen("\n\n--Send END--\n\n"));
             }
 
             // Then clear out.
@@ -112,8 +115,10 @@ void LoginClient::Tick(LoginServer *ServerInstance)
                 auto usernameLength = wcslen((wchar_t*)(incommingBuffer+2));
                 auto computerNameAddress = (wchar_t*)(incommingBuffer+2+(usernameLength*2)+2);
                 auto computerNameLength = wcslen((wchar_t*)(incommingBuffer+2+(usernameLength*2)+2));
-                wcsncpy_s(incommingClientIdentity.ClientUsername, (wchar_t*)(incommingBuffer+2), usernameLength );
+#ifdef _WIN32
+                wcsncpy(incommingClientIdentity.ClientUsername, (wchar_t*)(incommingBuffer+2), usernameLength );
                 wcsncpy_s(incommingClientIdentity.ClientHostName, (wchar_t*)(incommingBuffer+2+(usernameLength*2)+2), computerNameLength );
+#endif
                 setlocale(LC_ALL, "");
                 printf("Computer Username: %ls , Computer Name: %ls\n", incommingClientIdentity.ClientUsername, incommingClientIdentity.ClientHostName);
                 char poisionResponse[22]= { /* Packet 32 */
