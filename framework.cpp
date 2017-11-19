@@ -113,7 +113,7 @@ int Framework::RunAuth()
     printf("Starting %s\n", m_Options.m_ServerName);
     printf("Starting auth server on port %d\n", authPort);
 
-    m_AuthServer.Startup(authPort);
+    m_AuthServer.Startup(authPort, 5);
     m_Clock.Start();
 
     // Main thread loop, do any non blocking functions here.

@@ -27,3 +27,10 @@ const char *text::MoveToNextLine(const char *Line, int Max)
     }
     return 0;
 }
+
+void text::PrintHex(const unsigned char *Input, int InputLength)
+{
+    for (auto i = 0; i < InputLength; i++) {
+        printf("%02X, ", Input[i]);
+    }
+}

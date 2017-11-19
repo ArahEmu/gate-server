@@ -7,6 +7,8 @@
  * Developed by Nomelx
  * */
 
+#include <stdio.h>
+
 #define T_PREF_LENGTH 256
 
 class text
@@ -16,6 +18,8 @@ private:
 public:
     static int GetTextLengthNL(const char* Line, int Max);
     static const char* MoveToNextLine(const char* Line, int Max);
+public:
+    static void PrintHex(const unsigned char* Input, int InputLength);
 };
 
 #endif // TEXT_H

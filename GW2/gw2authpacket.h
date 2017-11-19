@@ -5,7 +5,7 @@
 class Gw2AuthPacket
 {
 public:
-    Gw2AuthPacket();
+    Gw2AuthPacket(unsigned char* buffer, unsigned int size);
 };
 
 #endif // GW2AUTHPACKET_H

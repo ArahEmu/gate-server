@@ -29,7 +29,7 @@ struct ClientIdentity {
 };
 
 /**************/
-
+// TODO: stop being a pleb and use the base class
 
 LoginClient::LoginClient(ClientConnection &Base) : ClientConnection(), m_Packet(), m_Login(this), m_Session(this), m_MitmSocket()
 {

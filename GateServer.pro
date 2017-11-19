@@ -64,7 +64,9 @@ SOURCES += main.cpp \
     GW2/gw2authpacket.cpp \
     Mitm/gw2forwardingclient.cpp \
     Mitm/proxyserver.cpp \
-    port.cpp
+    port.cpp \
+    Auth/authclient.cpp \
+    Auth/authclientpool.cpp
 
 QMAKE_CXXFLAGS +=
 
@@ -97,9 +99,11 @@ HEADERS += \
     GW2/gw2packet.h \
     GW2/gw2blacklist.h \
     Util/database.h \
-    Auth/authserver.h \
     GW2/gw2authpacket.h \
     Mitm/gw2forwardingclient.h \
     Mitm/proxyserver.h \
     defines.h \
-    port.h
+    port.h \
+    Auth/authserver.h \
+    Auth/authclient.h \
+    Auth/authclientpool.h
