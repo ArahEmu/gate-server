@@ -9,7 +9,6 @@
 
 #include "../Networking/clientconnection.h"
 #include "../GW2/gw2authpacket.h"
-#include "../Util/text.h"
 
 class AuthClient : public ClientConnection {
 

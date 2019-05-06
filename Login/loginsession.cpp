@@ -90,7 +90,8 @@ void LoginSession::Init(XMLPacket *Packet)
     /*printf("%s -> Client Query { Type: %d , Program: %d, Build: %d, Process: %d }\n", m_Client->m_ClientIP, m_ConnectionType,
            m_Program, m_Build, m_Process);*/
 
-    m_LogoutRequested = true;
+    // Looks like they are now keeping this socket open???
+    //m_LogoutRequested = true;
 }
 
 void LoginSession::StartTLS(XMLPacket *Packet)

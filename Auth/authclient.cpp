@@ -24,11 +24,7 @@ void AuthClient::Update()
     int readLength = this->Poll(incommingBuffer, 2048);
 
     if (readLength > 0) {
-        /*printf("Incomming Packet - Length %d\n-\n", readLength);
-        text::PrintHex((unsigned char*)incommingBuffer, readLength);
-        printf("\n-\n");*/
-
-        Gw2AuthPacket inPacket(incommingBuffer, readLength);
-
+        Gw2AuthPacket inPacket((unsigned char*)incommingBuffer, readLength);
+        inPacket.Print();
     }
 }
